@@ -1,0 +1,23 @@
+services:
+  antink-server:
+    build: .
+    container_name: antink-server-1
+    privileged: true           # perlu untuk mount propagation & fuse
+    cap_add:
+      - SYS_ADMIN
+    devices:
+      - /dev/fuse:/dev/fuse
+    security_opt:
+      - apparmor:unconfined
+    volumes:
+      - ./it24_host:/it24_host:rw
+      - ./antink_mount:/antink_mount:rw,shared    # <== enable shared propagation
+      - ./antink_logs:/var/log:rw
+    command: ["/src/antink", "/it24_host", "/antink_mount"]
+
+  antink-logger:
+    image: busybox
+    container_name: antink-logger-1
+    volumes:
+      - ./antink_logs:/var/log:rw
+    command: ["sh","-c","tail -F /var/log/it24.log"]
