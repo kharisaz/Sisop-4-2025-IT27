@@ -442,10 +442,15 @@ Pada soal ini kita ditugaskan untuk membuat program fuse yang berupa game, diman
         }
 
 - Untuk ketentuan area kedua, metro, perlu membuat function untuk shift file sesuai lokasinya, dimana terdapat ketentuan dalam shift :
+
 E -> E
+
 n -> o (+(1 % 256))
+
 e -> g (+(2 % 256))
+
 r -> u (+(3 % 256))
+
 
         void shift_content(const char *in_buf, char *out_buf, size_t size, int direction) {
             for (size_t i = 0; i < size; i++) {
