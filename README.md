@@ -512,7 +512,7 @@ r -> u (+(3 % 256))
                     return out_len1 + out_len2;
                 }
 
-  - Selanjutnya, perlu membuat function untuk mengompresi file ke zib untuk menghemat storage. Fitur ini digunakan ketika menyimpan file ke dalam area youth.
+- Selanjutnya, perlu membuat function untuk mengompresi file ke zib untuk menghemat storage. Fitur ini digunakan ketika menyimpan file ke dalam area youth.
 
         int gzip_compress(const char *in, size_t in_size, char *out, size_t *out_size) {
             z_stream zs = {0};
