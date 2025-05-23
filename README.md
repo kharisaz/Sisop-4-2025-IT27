@@ -439,11 +439,12 @@ Output yang diharapkan:
 ✓ Extraction and cleanup complete
 🚀 Starting FUSE...
 Mount point: mnt
+
 Mode 2: Debug Mode (untuk Troubleshooting)
 bash# Terminal 1 - Run dengan debug output
 ./hexed -d -f mnt
-
 Akan menampilkan semua FUSE operations
+
 Mode 3: Background/Daemon Mode
 bash# Run di background
 ./hexed mnt
@@ -451,6 +452,7 @@ bash# Run di background
 Cek apakah running
 ps aux | grep hexed
 mount | grep mnt
+
 4. Test Program (Terminal Baru)
 bash# Terminal 2 - Test functionality
 
@@ -477,6 +479,7 @@ head mnt/4.txt
 6. Cek semua hasil
 ls anomali/image/
 cat anomali/conversion.log
+
 5. Stop Program
 bash# Unmount FUSE filesystem
 fusermount -u mnt/
