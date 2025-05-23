@@ -413,7 +413,7 @@ bash# Install dependencies
 sudo apt-get update
 sudo apt-get install gcc libfuse-dev pkg-config curl unzip
 
-# Pastikan di directory yang tepat
+Pastikan di directory yang tepat
 cd ~/modul_4/soal_1/
 2. Compile Program
 bash# Compile dengan flag yang benar
@@ -423,57 +423,56 @@ Mode 1: Foreground (Recommended untuk Development)
 bash# Terminal 1 - Run FUSE program
 ./hexed -f mnt
 
-# Output yang diharapkan:
-# === FUSE Hex to Image Converter ===
-# 🧙 Shorekeeper's Assistant
-# === Auto Setup ===
-# ✓ Created: hexed/
-# ✓ Created: anomali/
-# ✓ Created: anomali/image/
-# ✓ Created: mnt/
-# ✅ Setup complete!
-# 📥 Downloading...
-# 📦 Extracting...
-# ✓ Extraction and cleanup complete
-# 🚀 Starting FUSE...
-# Mount point: mnt
+Output yang diharapkan:
+=== FUSE Hex to Image Converter ===
+🧙 Shorekeeper's Assistant
+=== Auto Setup ===
+✓ Created: hexed/
+✓ Created: anomali/
+✓ Created: anomali/image/
+✓ Created: mnt/
+✅ Setup complete!
+📥 Downloading...
+📦 Extracting...
+✓ Extraction and cleanup complete
+🚀 Starting FUSE...
+Mount point: mnt
 Mode 2: Debug Mode (untuk Troubleshooting)
 bash# Terminal 1 - Run dengan debug output
 ./hexed -d -f mnt
 
-# Akan menampilkan semua FUSE operations
+Akan menampilkan semua FUSE operations
 Mode 3: Background/Daemon Mode
 bash# Run di background
 ./hexed mnt
 
-# Cek apakah running
+Cek apakah running
 ps aux | grep hexed
 mount | grep mnt
 4. Test Program (Terminal Baru)
 bash# Terminal 2 - Test functionality
 
-# 1. List files di mount point
+1. List files di mount point
 ls mnt/
-# Expected: 1.txt 2.txt 3.txt 4.txt 5.txt 6.txt 7.txt conversion.log image
+Expected: 1.txt 2.txt 3.txt 4.txt 5.txt 6.txt 7.txt conversion.log image
 
-# 2. Trigger konversi dengan membaca file
+2. Trigger konversi dengan membaca file
 cat mnt/1.txt
-# Expected: Hex content displayed + konversi triggered
+Expected: Hex content displayed + konversi triggered
 
-# 3. Cek hasil konversi
+3. Cek hasil konversi
 ls anomali/image/
-# Expected: 1_image_2025-05-23_23:20:10.png
+Expected: 1_image_2025-05-23_23:20:10.png
 
-# 4. Cek log
+4. Cek log
 cat anomali/conversion.log
-# Expected: [2025-05-23][23:20:10]: Successfully converted hexadecimal text 1.txt to 1_image_2025-05-23_23:20:10.png.
-
-# 5. Test file lain
+Expected: [2025-05-23][23:20:10]: Successfully converted hexadecimal text 1.txt to 1_image_2025-05-23_23:20:10.png.
+5. Test file lain
 cat mnt/2.txt
 cat mnt/3.txt
 head mnt/4.txt
 
-# 6. Cek semua hasil
+6. Cek semua hasil
 ls anomali/image/
 cat anomali/conversion.log
 5. Stop Program
