@@ -10,8 +10,87 @@ Abiyyu Raihan Putra Wikanto - 5027241042
 
 ============[Laporan Resmi Penjelasan Soal]=============
 
-## soal_1
+## soal_1(Revisi)
+Program ini adalah FUSE filesystem yang mengkonversi file hexadecimal menjadi image ketika file tersebut dibaca melalui mount point.
 
+📋 Struktur Code
+1. Headers dan Definitions
+
+        #define FUSE_USE_VERSION 26  // Menggunakan FUSE API versi 2.6
+        #include <fuse.h>     // Library FUSE utama
+        #include <stdio.h>    // Standard I/O
+        #include <string.h>   // String operations
+        #include <errno.h>    // Error codes
+        #include <fcntl.h>    // File control
+        #include <stdlib.h>   // Standard library
+        #include <unistd.h>   // UNIX standard
+        #include <sys/stat.h> // File status
+        #include <sys/types.h>// System types
+        #include <dirent.h>   // Directory operations
+        #include <time.h>     // Time functions
+        #include <ctype.h>    // Character types
+
+   2. Global Variables
+  
+        // Cache untuk mencegah konversi duplikat
+        static char converted_files[100][256];  // Array nama file yang sudah dikonversi
+        static int converted_count = 0;         // Jumlah file yang sudah dikonversi
+        
+        // Path directories
+        static const char *anomali_dir = "anomali";           // Source directory
+        static const char *image_dir = "anomali/image";       // Output directory
+        static const char *log_file = "anomali/conversion.log"; // Log file
+
+3. Cache Management Functions
+
+        // Cek apakah file sudah pernah dikonversi
+        int is_already_converted(const char* filename) {
+            for (int i = 0; i < converted_count; i++) {
+                if (strcmp(converted_files[i], filename) == 0) {
+                    return 1; // Sudah dikonversi
+                }
+            }
+            return 0; // Belum dikonversi
+        }
+        
+        // Tandai file sebagai sudah dikonversi
+        void mark_as_converted(const char* filename) {
+            if (converted_count < 100) {
+                strncpy(converted_files[converted_count], filename, 255);
+                converted_files[converted_count][255] = '\0';
+                converted_count++;
+            }
+        }
+   
+        Fungsi: Mencegah file dikonversi berulang kali
+
+5. Directory Setup Functions
+
+        // Buat directory jika belum ada
+        int create_dir(const char* path) {
+            if (mkdir(path, 0755) == 0) {
+                printf("✓ Created: %s/\n", path);
+                return 0;
+            } else if (errno == EEXIST) {
+                printf("✓ Exists: %s/\n", path);
+                return 0;
+            }
+            printf("❌ Failed: %s/\n", path);
+            return -1;
+        }
+        
+        // Setup semua directory yang diperlukan
+        int setup_dirs() {
+            printf("=== Auto Setup ===\n");
+            if (create_dir("hexed") != 0) return -1;       // Code directory
+            if (create_dir("anomali") != 0) return -1;     // Source directory
+            if (create_dir("anomali/image") != 0) return -1; // Output directory
+            if (create_dir("mnt") != 0) return -1;          // Mount point
+            printf("✅ Setup complete!\n\n");
+            return 0;
+        }
+   
+Fungsi: Membuat struktur folder otomatis
 
 ## soal_2
 
