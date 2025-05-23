@@ -181,6 +181,7 @@ Fungsi: Download file anomali dan extract ke struktur yang benar
             return 0;
         }
 Fungsi: Konversi string hexadecimal ke data binary
+
 7. Timestamp & Logging Functions
 
 
@@ -211,6 +212,7 @@ Fungsi: Konversi string hexadecimal ke data binary
             }
         }
 Fungsi: Generate timestamp dan logging aktivitas
+
 8. Core Conversion Function
 
 
@@ -276,6 +278,7 @@ Fungsi: Generate timestamp dan logging aktivitas
             return 0;
         }
 Fungsi: Core function untuk konversi hex ke image
+
 9. FUSE Operations
 
         // FUSE getattr - mendapatkan atribut file
@@ -375,6 +378,7 @@ Fungsi: Core function untuk konversi hex ke image
             return bytes;
         }
 Fungsi: FUSE operations untuk virtual filesystem
+
 10. Main Function
 
 
@@ -402,6 +406,7 @@ Fungsi: FUSE operations untuk virtual filesystem
             // Start FUSE main loop
             return fuse_main(argc, argv, &hello_oper, NULL);
         }
+    
 🚀 Cara Menjalankan Program
 1. Persiapan Environment
 bash# Install dependencies
