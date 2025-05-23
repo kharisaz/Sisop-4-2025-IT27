@@ -40,7 +40,6 @@ Program ini adalah FUSE filesystem yang mengkonversi file hexadecimal menjadi im
         static const char *anomali_dir = "anomali";           // Source directory
         static const char *image_dir = "anomali/image";       // Output directory
         static const char *log_file = "anomali/conversion.log"; // Log file
-
       
 
 3. Cache Management Functions
