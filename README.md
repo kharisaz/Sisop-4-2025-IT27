@@ -32,14 +32,14 @@ Program ini adalah FUSE filesystem yang mengkonversi file hexadecimal menjadi im
 
    2. Global Variables
 
-        // Cache untuk mencegah konversi duplikat
-        static char converted_files[100][256];  // Array nama file yang sudah dikonversi
-        static int converted_count = 0;         // Jumlah file yang sudah dikonversi
-        
-        // Path directories
-        static const char *anomali_dir = "anomali";           // Source directory
-        static const char *image_dir = "anomali/image";       // Output directory
-        static const char *log_file = "anomali/conversion.log"; // Log file
+                // Cache untuk mencegah konversi duplikat
+                static char converted_files[100][256];  // Array nama file yang sudah dikonversi
+                static int converted_count = 0;         // Jumlah file yang sudah dikonversi
+                
+                // Path directories
+                static const char *anomali_dir = "anomali";           // Source directory
+                static const char *image_dir = "anomali/image";       // Output directory
+                static const char *log_file = "anomali/conversion.log"; // Log file
       
 
 3. Cache Management Functions
