@@ -415,9 +415,11 @@ sudo apt-get install gcc libfuse-dev pkg-config curl unzip
 
 Pastikan di directory yang tepat
 cd ~/modul_4/soal_1/
+
 2. Compile Program
 bash# Compile dengan flag yang benar
 gcc -D_FILE_OFFSET_BITS=64 -o hexed hexed.c -lfuse -lpthread
+
 3. Jalankan Program
 Mode 1: Foreground (Recommended untuk Development)
 bash# Terminal 1 - Run FUSE program
