@@ -62,10 +62,11 @@ Program ini adalah FUSE filesystem yang mengkonversi file hexadecimal menjadi im
                 converted_count++;
             }
         }
+
    
         Fungsi: Mencegah file dikonversi berulang kali
 
-5. Directory Setup Functions
+4. Directory Setup Functions
 
         // Buat directory jika belum ada
         int create_dir(const char* path) {
@@ -92,6 +93,388 @@ Program ini adalah FUSE filesystem yang mengkonversi file hexadecimal menjadi im
         }
    
 Fungsi: Membuat struktur folder otomatis
+
+5. Download & Extract Functions
+
+
+        // Download file dari Google Drive
+        int download() {
+            printf("📥 Downloading...\n");
+            int result = system("curl -L -o anomali_samples.zip 'https://drive.usercontent.google.com/u/0/uc?id=1hi_GDdP51Kn2JJMw02WmCOxuc3qrXzh5&export=download'");
+            if (result != 0) {
+                // Fallback ke wget jika curl gagal
+                result = system("wget -O anomali_samples.zip 'https://drive.usercontent.google.com/u/0/uc?id=1hi_GDdP51Kn2JJMw02WmCOxuc3qrXzh5&export=download'");
+            }
+            return result;
+        }
+        
+        // Extract zip dan pindahkan file ke lokasi yang benar
+        int extract() {
+            printf("📦 Extracting...\n");
+            
+            // Extract ke current directory
+            int result = system("unzip -o anomali_samples.zip");
+            
+            if (result == 0) {
+                printf("✓ Extraction successful\n");
+                
+                // Handle folder double (anomali/anomali/)
+                if (access("anomali/1.txt", F_OK) == 0) {
+                    printf("✓ Files already in correct location\n");
+                } else if (access("anomali/anomali/1.txt", F_OK) == 0) {
+                    printf("🔄 Moving files from double folder...\n");
+                    system("mv anomali/anomali/*.txt anomali/ 2>/dev/null");
+                    system("rmdir anomali/anomali/ 2>/dev/null");
+                    printf("✓ Files moved to correct location\n");
+                }
+                
+                // Clean up
+                system("rm -f anomali_samples.zip");
+                printf("✓ Extraction and cleanup complete\n");
+            }
+            
+            return result;
+        }
+Fungsi: Download file anomali dan extract ke struktur yang benar
+
+6. Hexadecimal Conversion Functions
+
+
+        // Convert karakter hex ke integer
+        int hex_to_int(char c) {
+            if (c >= '0' && c <= '9') return c - '0';
+            if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+            if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+            return -1;
+        }
+        
+        // Convert string hex ke binary data
+        int hex_to_bin(const char* hex, unsigned char** bin, size_t* size) {
+            size_t len = strlen(hex);
+            size_t count = 0;
+            
+            // Hitung karakter hex yang valid
+            for (size_t i = 0; i < len; i++) {
+                if (isxdigit(hex[i])) count++;
+            }
+            
+            if (count == 0) return -1;
+            if (count % 2 != 0) count++; // Padding jika jumlah ganjil
+            
+            *size = count / 2;
+            *bin = malloc(*size);
+            if (*bin == NULL) return -1;
+            
+            // Konversi hex ke binary
+            size_t hex_pos = 0, bin_pos = 0;
+            for (size_t i = 0; i < len && bin_pos < *size; i++) {
+                if (isxdigit(hex[i])) {
+                    if (hex_pos % 2 == 0) {
+                        (*bin)[bin_pos] = hex_to_int(hex[i]) << 4;
+                    } else {
+                        (*bin)[bin_pos] |= hex_to_int(hex[i]);
+                        bin_pos++;
+                    }
+                    hex_pos++;
+                }
+            }
+            return 0;
+        }
+Fungsi: Konversi string hexadecimal ke data binary
+7. Timestamp & Logging Functions
+
+
+        // Generate timestamp untuk nama file
+        void get_time(char* buf, size_t size) {
+            time_t t = time(NULL);
+            struct tm* tm = localtime(&t);
+            strftime(buf, size, "%Y-%m-%d_%H:%M:%S", tm);
+        }
+        
+        // Generate timestamp untuk log
+        void get_log_time(char* buf, size_t size) {
+            time_t t = time(NULL);
+            struct tm* tm = localtime(&t);
+            strftime(buf, size, "[%Y-%m-%d][%H:%M:%S]", tm);
+        }
+        
+        // Tulis entry ke log file
+        void write_log_entry(const char* src, const char* dst) {
+            FILE* f = fopen(log_file, "a");
+            if (f) {
+                char timestamp[64];
+                get_log_time(timestamp, sizeof(timestamp));
+                fprintf(f, "%s: Successfully converted hexadecimal text %s to %s.\n", 
+                        timestamp, src, dst);
+                fclose(f);
+                printf("📝 Logged: %s -> %s\n", src, dst);
+            }
+        }
+Fungsi: Generate timestamp dan logging aktivitas
+8. Core Conversion Function
+
+
+        // Fungsi utama konversi file hex ke image
+        int convert_file(const char* filename) {
+            char path[1024];
+            snprintf(path, sizeof(path), "%s/%s", anomali_dir, filename);
+            
+            // Baca file hex
+            FILE* f = fopen(path, "r");
+            if (!f) return -1;
+            
+            fseek(f, 0, SEEK_END);
+            long size = ftell(f);
+            fseek(f, 0, SEEK_SET);
+            
+            char* hex = malloc(size + 1);
+            fread(hex, 1, size, f);
+            hex[size] = '\0';
+            fclose(f);
+            
+            // Konversi hex ke binary
+            unsigned char* bin;
+            size_t bin_size;
+            if (hex_to_bin(hex, &bin, &bin_size) != 0) {
+                free(hex);
+                return -1;
+            }
+            
+            // Generate nama file output dengan timestamp
+            char timestamp[32];
+            get_time(timestamp, sizeof(timestamp));
+            
+            char basename[256];
+            strncpy(basename, filename, sizeof(basename) - 1);
+            char* dot = strrchr(basename, '.');
+            if (dot) *dot = '\0';
+            
+            char outname[1024];
+            snprintf(outname, sizeof(outname), "%s_image_%s.png", basename, timestamp);
+            
+            char outpath[1024];
+            snprintf(outpath, sizeof(outpath), "%s/%s", image_dir, outname);
+            
+            // Tulis binary data ke file image
+            FILE* out = fopen(outpath, "wb");
+            if (!out) {
+                free(hex);
+                free(bin);
+                return -1;
+            }
+            
+            fwrite(bin, 1, bin_size, out);
+            fclose(out);
+            
+            // Log dan cleanup
+            write_log_entry(filename, outname);
+            printf("✅ Converted: %s -> %s (%zu bytes)\n", filename, outname, bin_size);
+            
+            free(hex);
+            free(bin);
+            sleep(1); // Delay untuk timestamp unik
+            return 0;
+        }
+Fungsi: Core function untuk konversi hex ke image
+9. FUSE Operations
+
+        // FUSE getattr - mendapatkan atribut file
+        static int hello_getattr(const char *path, struct stat *stbuf) {
+            memset(stbuf, 0, sizeof(struct stat));
+            
+            if (strcmp(path, "/") == 0) {
+                // Root directory
+                stbuf->st_mode = S_IFDIR | 0755;
+                stbuf->st_nlink = 2;
+                return 0;
+            }
+            
+            // Map path dari mount ke anomali directory
+            char full_path[1024];
+            snprintf(full_path, sizeof(full_path), "%s%s", anomali_dir, path);
+            
+            if (stat(full_path, stbuf) == 0) {
+                return 0;
+            }
+            
+            return -ENOENT;
+        }
+        
+        // FUSE readdir - list isi directory
+        static int hello_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
+                                 off_t offset, struct fuse_file_info *fi) {
+            char full_path[1024];
+            snprintf(full_path, sizeof(full_path), "%s%s", anomali_dir, path);
+            
+            DIR *dp = opendir(full_path);
+            if (!dp) return -ENOENT;
+            
+            filler(buf, ".", NULL, 0);
+            filler(buf, "..", NULL, 0);
+            
+            struct dirent *de;
+            while ((de = readdir(dp)) != NULL) {
+                if (strcmp(de->d_name, ".") && strcmp(de->d_name, "..")) {
+                    filler(buf, de->d_name, NULL, 0);
+                }
+            }
+            
+            closedir(dp);
+            return 0;
+        }
+        
+        // FUSE open - buka file untuk reading
+        static int hello_open(const char *path, struct fuse_file_info *fi) {
+            char full_path[1024];
+            snprintf(full_path, sizeof(full_path), "%s%s", anomali_dir, path);
+            
+            if (access(full_path, F_OK) != 0) return -ENOENT;
+            if ((fi->flags & 3) != O_RDONLY) return -EACCES;
+            
+            return 0;
+        }
+        
+        // FUSE read - TRIGGER untuk konversi hex ke image
+        static int hello_read(const char *path, char *buf, size_t size, off_t offset,
+                              struct fuse_file_info *fi) {
+            // TRIGGER KONVERSI untuk file .txt (hanya sekali per file)
+            const char* filename = path + 1;
+            if (strstr(filename, ".txt") && strlen(filename) > 4) {
+                if (!is_already_converted(filename)) {
+                    printf("🚀 Converting: %s\n", filename);
+                    if (convert_file(filename) == 0) {
+                        mark_as_converted(filename);
+                    }
+                }
+            }
+            
+            // Baca file asli dan return ke user
+            char full_path[1024];
+            snprintf(full_path, sizeof(full_path), "%s%s", anomali_dir, path);
+            
+            FILE *f = fopen(full_path, "r");
+            if (!f) return -errno;
+            
+            fseek(f, 0, SEEK_END);
+            long file_size = ftell(f);
+            fseek(f, 0, SEEK_SET);
+            
+            if (offset >= file_size) {
+                fclose(f);
+                return 0;
+            }
+            
+            if (offset + (long)size > file_size) {
+                size = file_size - offset;
+            }
+            
+            fseek(f, offset, SEEK_SET);
+            size_t bytes = fread(buf, 1, size, f);
+            fclose(f);
+            
+            return bytes;
+        }
+Fungsi: FUSE operations untuk virtual filesystem
+10. Main Function
+
+
+        int main(int argc, char *argv[]) {
+            if (argc < 2) {
+                printf("Usage: %s <mountpoint>\n", argv[0]);
+                return 1;
+            }
+            
+            printf("=== FUSE Hex to Image Converter ===\n");
+            printf("🧙 Shorekeeper's Assistant\n\n");
+            
+            // Setup environment
+            if (setup_dirs() != 0) return 1;
+            if (download() != 0) return 1;
+            if (extract() != 0) return 1;
+            
+            // Initialize log
+            FILE* log = fopen(log_file, "w");
+            if (log) fclose(log);
+            
+            printf("\n🚀 Starting FUSE...\n");
+            printf("Mount point: %s\n", argv[argc-1]);
+            
+            // Start FUSE main loop
+            return fuse_main(argc, argv, &hello_oper, NULL);
+        }
+🚀 Cara Menjalankan Program
+1. Persiapan Environment
+bash# Install dependencies
+sudo apt-get update
+sudo apt-get install gcc libfuse-dev pkg-config curl unzip
+
+# Pastikan di directory yang tepat
+cd ~/modul_4/soal_1/
+2. Compile Program
+bash# Compile dengan flag yang benar
+gcc -D_FILE_OFFSET_BITS=64 -o hexed hexed.c -lfuse -lpthread
+3. Jalankan Program
+Mode 1: Foreground (Recommended untuk Development)
+bash# Terminal 1 - Run FUSE program
+./hexed -f mnt
+
+# Output yang diharapkan:
+# === FUSE Hex to Image Converter ===
+# 🧙 Shorekeeper's Assistant
+# === Auto Setup ===
+# ✓ Created: hexed/
+# ✓ Created: anomali/
+# ✓ Created: anomali/image/
+# ✓ Created: mnt/
+# ✅ Setup complete!
+# 📥 Downloading...
+# 📦 Extracting...
+# ✓ Extraction and cleanup complete
+# 🚀 Starting FUSE...
+# Mount point: mnt
+Mode 2: Debug Mode (untuk Troubleshooting)
+bash# Terminal 1 - Run dengan debug output
+./hexed -d -f mnt
+
+# Akan menampilkan semua FUSE operations
+Mode 3: Background/Daemon Mode
+bash# Run di background
+./hexed mnt
+
+# Cek apakah running
+ps aux | grep hexed
+mount | grep mnt
+4. Test Program (Terminal Baru)
+bash# Terminal 2 - Test functionality
+
+# 1. List files di mount point
+ls mnt/
+# Expected: 1.txt 2.txt 3.txt 4.txt 5.txt 6.txt 7.txt conversion.log image
+
+# 2. Trigger konversi dengan membaca file
+cat mnt/1.txt
+# Expected: Hex content displayed + konversi triggered
+
+# 3. Cek hasil konversi
+ls anomali/image/
+# Expected: 1_image_2025-05-23_23:20:10.png
+
+# 4. Cek log
+cat anomali/conversion.log
+# Expected: [2025-05-23][23:20:10]: Successfully converted hexadecimal text 1.txt to 1_image_2025-05-23_23:20:10.png.
+
+# 5. Test file lain
+cat mnt/2.txt
+cat mnt/3.txt
+head mnt/4.txt
+
+# 6. Cek semua hasil
+ls anomali/image/
+cat anomali/conversion.log
+5. Stop Program
+bash# Unmount FUSE filesystem
+fusermount -u mnt/
+
 
 ## soal_2
 
